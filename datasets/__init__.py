@@ -13,3 +13,7 @@ from .abc_test import ABCTest, ABCTestNoiseFree, ABCTestExtraNoise
 from .real_world import RealWorld
 from .famous_test import FamousTest, FamousTestNoiseFree, FamousTestExtraNoisy, FamousTestSparse, FamousTestDense
 from .thingi10k_test import Thingi10kTest, Thingi10kTestNoiseFree, Thingi10kTestExtraNoisy, Thingi10kTestSparse, Thingi10kTestDense
+
+from .modelnet_viewpoints import ModelNetViewpoints
+from .shapenet_viewpoints import ShapeNetViewpoints
+from .scenenet_rgbd import SceneNetRGBD

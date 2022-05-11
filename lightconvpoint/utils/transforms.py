@@ -379,7 +379,7 @@ class FieldAsFeatures(object):
         features = torch.cat(features, dim=1)
         data["x"] = features
         return data
-
+    
 class Unsqueeze(object):
 
     # extension of the Fixed points from torch_geometric with a given list of item to sample

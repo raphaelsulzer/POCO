@@ -1,0 +1,12 @@
+dataset_name: ShapeNetViewpoints
+dataset_root: data/ShapeNet
+
+manifold_points: 3000
+non_manifold_points: 2048
+random_noise: 0.0
+normals: True
+# training_random_rotation_x: 180
+# training_random_rotation_y: 180
+# training_random_rotation_z: 180
+
+iter_nbr: 600000

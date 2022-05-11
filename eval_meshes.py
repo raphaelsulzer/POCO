@@ -51,11 +51,13 @@ if __name__ == "__main__":
 
         category = eval_dataset.get_category(shape_id)
         object_name = eval_dataset.get_object_name(shape_id)
+        
+        pred_dir = eval_dataset.get_save_dir(shape_id)
 
         if args.meshdir is None:
-            pred_name = os.path.join(args.gendir, category, object_name+".ply")
+            pred_name = os.path.join(args.gendir, pred_dir, object_name+".ply")
         else:
-            pred_name = os.path.join(args.gendir, args.meshdir, category, object_name+".ply")
+            pred_name = os.path.join(args.gendir, args.meshdir, pred_dir, object_name+".ply")
 
         ## load the ground truth
         data_shape, data_space = eval_dataset.get_data_for_evaluation(shape_id)

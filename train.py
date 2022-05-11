@@ -46,7 +46,6 @@ def main(config):
 
     savedir_root = os.path.join(config["save_dir"],f"{config['dataset_name']}_{config['experiment_name']}_{config['network_backbone']}_{config['network_decoder']}_{config['filter_name']}")
 
-
     logging.getLogger().setLevel(config["logging"])
 
     # create the network
@@ -87,10 +86,6 @@ def main(config):
     if (config["random_noise"] is not None) and (config["random_noise"] > 0):
         train_transform.append(lcp_T.RandomNoiseNormal(sigma=config["random_noise"]))
         test_transform.append(lcp_T.RandomNoiseNormal(sigma=config["random_noise"]))
-
-    if config["normals"]:
-        logging.info("Normals as features")
-        test_transform.append(lcp_T.FieldAsFeatures(["normal"]))
 
     # operate the permutations
     train_transform = train_transform + [
@@ -169,6 +164,8 @@ def main(config):
     logging.info("Creating tensorboard summary writer")
     writer = SummaryWriter(log_dir=os.path.join(savedir_root, "logs_tb"))
 
+
+
     epoch = epoch_start
     while True:
 
@@ -190,6 +187,9 @@ def main(config):
 
             data = dict_to_device(data, device)
             optimizer.zero_grad()
+
+            if config["normals"]:
+                data["x"] = data["normal"]
 
             outputs = net(data, spectral_only=True)
             occupancies = data["occupancies"]

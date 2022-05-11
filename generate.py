@@ -61,7 +61,7 @@ def export_mesh_and_refine_vertices_region_growing_v2(
     bmax_pad = bmax + padding * step
 
     pts_ids = (input_points - bmin)/step + padding
-    pts_ids = pts_ids.astype(np.int)
+    pts_ids = pts_ids.astype(int)
 
     # create the volume
     volume = np.full((resolutionX+2*padding, resolutionY+2*padding, resolutionZ+2*padding), np.nan, dtype=np.float64)
@@ -138,7 +138,7 @@ def export_mesh_and_refine_vertices_region_growing_v2(
         # get the new points
         
         new_mask = (mask_neg & (volume>=0) & mask_to_see) | (mask_pos & (volume<=0) & mask_to_see)
-        pts_ids = np.argwhere(new_mask).astype(np.int)
+        pts_ids = np.argwhere(new_mask).astype(int)
 
     volume[0:padding, :, :] = out_value
     volume[-padding:, :, :] = out_value
@@ -337,7 +337,7 @@ def main(config):
     test_transform = test_transform + [
                                             lcp_T.Permutation("pos", [1,0]),
                                             lcp_T.Permutation("pos_non_manifold", [1,0]),
-                                            lcp_T.Permutation("normal", [1,0]),
+                                            # lcp_T.Permutation("normal", [1,0]),
                                             lcp_T.Permutation("x", [1,0]),
                                             lcp_T.ToDict(),]
     test_transform = T.Compose(test_transform)
@@ -381,13 +381,14 @@ def main(config):
             shape_id = data["shape_id"].item()
             category_name = gen_dataset.get_category(shape_id)
             object_name = gen_dataset.get_object_name(shape_id)
+            savedir = gen_dataset.get_save_dir(shape_id)
 
-            print(f"{shape_id} | {category_name} - {object_name} - {data['pos'].shape}")
+            # print(f"{shape_id} | {category_name} - {object_name} - {data['pos'].shape}")
 
             # create the directories
-            savedir_points = os.path.join(savedir_mesh_root, "input", category_name)
+            savedir_points = os.path.join(savedir_mesh_root, "input", savedir)
             os.makedirs(savedir_points, exist_ok=True)
-            savedir_mesh = os.path.join(savedir_mesh_root, "meshes", category_name)
+            savedir_mesh = os.path.join(savedir_mesh_root, "meshes", savedir)
             os.makedirs(savedir_mesh, exist_ok=True)
 
             # if resume skip if the file already exists
@@ -400,14 +401,16 @@ def main(config):
                         continue
 
             data = dict_to_device(data, device)
+            # if config["normals"]:
+            #     data["x"] = data["normal"]
 
 
-            # save the input
-            pts = data["pos"][0].transpose(1,0).cpu().numpy()
-            nls = data["x"][0].transpose(1,0).cpu().numpy()
-            pts = np.concatenate([pts, nls], axis=1)
-            pts = pts.astype(np.float16)
-            np.savetxt(os.path.join(savedir_points, object_name+".xyz"), pts)
+            # # save the input
+            # pts = data["pos"][0].transpose(1,0).cpu().numpy()
+            # nls = data["x"][0].transpose(1,0).cpu().numpy()
+            # pts = np.concatenate([pts, nls], axis=1)
+            # pts = pts.astype(np.float16)
+            # np.savetxt(os.path.join(savedir_points, object_name+".xyz"), pts)
 
             # auto scale (for big scenes)
             if "gen_autoscale" in config and config["gen_autoscale"]:
@@ -526,7 +529,7 @@ def main(config):
 
 
 
-            print("POS", data["pos"].shape)
+            # print("POS", data["pos"].shape)
             mesh = export_mesh_and_refine_vertices_region_growing_v2(
                 net, latent,
                 resolution=resolution,
@@ -547,7 +550,7 @@ def main(config):
                 vertices = o3d.utility.Vector3dVector(vertices)
                 mesh.vertices = vertices
 
-                print(os.path.join(savedir_mesh, object_name))
+                # print(os.path.join(savedir_mesh, object_name))
 
                 if os.path.splitext(object_name)[1] == ".ply":
                     o3d.io.write_triangle_mesh(os.path.join(savedir_mesh, object_name), mesh)
@@ -588,6 +591,6 @@ if __name__ == "__main__":
     if config["logging"] == "DEBUG":
         config["threads"] = 0
     
-    config["save_dir"] = os.path.dirname(config["config"])
+    # config["save_dir"] = os.path.dirname(config["config"])
 
     main(config)
