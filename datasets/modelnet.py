@@ -6,38 +6,59 @@ import torch
 import glob
 import logging
 
-class ShapeNet(Dataset):
+class ModelNet10(Dataset):
 
-    def __init__(self, root, scan, split="training", categories=None, rotate=None, transform=None, filter_name=None, num_non_manifold_points=2048, dataset_size=None, **kwargs):
+    def __init__(self, root, scan, split="training", categories=None, transform=None, filter_name=None, num_non_manifold_points=2048, dataset_size=None, **kwargs):
             
         super().__init__(root, transform, None)
 
-        logging.info(f"Dataset  - ShapeNet- {dataset_size}")
+        logging.info(f"Dataset  - ModelNet10- {dataset_size}")
+
+        if categories is None:
+            with open(os.path.join(root,"classes.lst"), 'r') as f:
+                categories = f.read().split('\n')
+            if '' in categories:
+                categories.remove('')
 
         self.scan = scan
-        self.rotate = rotate
-        self.R =  np.array([[-1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype=np.float32)
         self.split = split
         self.filter_name = filter_name
         self.filelists = []
         self.num_non_manifold_points = num_non_manifold_points
+
         if split in ["train", "training"]:
-            for path in glob.glob(os.path.join(self.root,"*/train.lst")):
-                self.filelists.append(path)
+            for c in categories:
+                self.filelists.append(os.path.join(self.root,c,"train.lst"))
         elif split in ["validation", "val"]:
-            for path in glob.glob(os.path.join(self.root,"*/val.lst")):
-                self.filelists.append(path)
+            for c in categories:
+                self.filelists.append(os.path.join(self.root,c,"val.lst"))
         elif split in ["trainVal", "trainingValidation", "training_validation"]:
-            for path in glob.glob(os.path.join(self.root,"*/train.lst")):
-                self.filelists.append(path)
-            for path in glob.glob(os.path.join(self.root,"*/val.lst")):
-                self.filelists.append(path)
+            for c in categories:
+                self.filelists.append(os.path.join(self.root,c,"train.lst"))
+            for c in categories:
+                self.filelists.append(os.path.join(self.root,c,"val.lst"))
         elif split in ["test", "testing"]:
-            for path in glob.glob(os.path.join(self.root,"*/test100.lst")):
-                self.filelists.append(path)
+            for c in categories:
+                self.filelists.append(os.path.join(self.root,c,"test.lst"))
+
+        # if split in ["train", "training"]:
+        #     for path in glob.glob(os.path.join(self.root,"*/train.lst")):
+        #         self.filelists.append(path)
+        # elif split in ["validation", "val"]:
+        #     for path in glob.glob(os.path.join(self.root,"*/val.lst")):
+        #         self.filelists.append(path)
+        # elif split in ["trainVal", "trainingValidation", "training_validation"]:
+        #     for path in glob.glob(os.path.join(self.root,"*/train.lst")):
+        #         self.filelists.append(path)
+        #     for path in glob.glob(os.path.join(self.root,"*/val.lst")):
+        #         self.filelists.append(path)
+        # elif split in ["test", "testing"]:
+        #     for path in glob.glob(os.path.join(self.root,"*/test.lst")):
+        #         self.filelists.append(path)
         self.filelists.sort()
 
         self.filenames = []
+
 
         for flist in self.filelists:
             with open(flist) as f:
@@ -66,61 +87,7 @@ class ShapeNet(Dataset):
         logging.info(f"Dataset - len {len(self.filenames)}")
 
 
-        self.metadata = {
-        "04256520": {
-            "id": "04256520",
-            "name": "sofa"
-        },
-        "02691156": {
-            "id": "02691156",
-            "name": "airplane"
-        },
-        "03636649": {
-            "id": "03636649",
-            "name": "lamp"
-        },
-        "04401088": {
-            "id": "04401088",
-            "name": "phone"
-        },
-        "04530566": {
-            "id": "04530566",
-            "name": "vessel"
-        },
-        "03691459": {
-            "id": "03691459",
-            "name": "speaker"
-        },
-        "03001627": {
-            "id": "03001627",
-            "name": "chair"
-        },
-        "02933112": {
-            "id": "02933112",
-            "name": "cabinet"
-        },
-        "04379243": {
-            "id": "04379243",
-            "name": "table"
-        },
-        "03211117": {
-            "id": "03211117",
-            "name": "display"
-        },
-        "02958343": {
-            "id": "02958343",
-            "name": "car"
-        },
-        "02828884": {
-            "id": "02828884",
-            "name": "bench"
-        },
-        "04090263": {
-            "id": "04090263",
-            "name": "rifle"
-        }
-    }
-
+        self.metadata = None
 
     def get_category(self, f_id):
         return self.filenames[f_id].split("/")[-2]
@@ -162,22 +129,13 @@ class ShapeNet(Dataset):
         return data_shape, data_space
 
     def get(self, idx):
-
         """Get item."""
         filename = self.filenames[idx]
-        manifold_data = np.load(os.path.join(filename, "scan",str(self.scan)+".npz"))
+        manifold_data =np.load(os.path.join(filename, "scan",str(self.scan)+".npz"))
         points_shape = manifold_data["points"]
         normals_shape = manifold_data["normals"]
-
-        if self.rotate:
-            points_shape = np.matmul(points_shape,self.R)
-            normals_shape = np.matmul(normals_shape,self.R)
-
-
         pts_shp = torch.tensor(points_shape, dtype=torch.float)
         nls_shp = torch.tensor(normals_shape, dtype=torch.float)
-
-
 
         points = np.load(os.path.join(filename, "eval","points.npz"))
         points_space = torch.tensor(points["points"], dtype=torch.float)

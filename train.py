@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import yaml
@@ -40,11 +39,13 @@ def main(config):
     
     config = eval(str(config))    
     disable_log = (config["log_mode"] != "interactive")
-    device = torch.device(config['device'])
-    if config["device"] == "cuda":
-        torch.backends.cudnn.benchmark = True
+    device = torch.device(config['device']+":"+str(config["gpu"]))
 
-    savedir_root = os.path.join(config["save_dir"],f"{config['dataset_name']}_{config['experiment_name']}_{config['network_backbone']}_{config['network_decoder']}_{config['filter_name']}")
+    # if config["device"] == "cuda":
+    torch.backends.cudnn.benchmark = True
+
+    savedir_root = config["save_dir"]
+    # savedir_root = os.path.join(config["save_dir"],f"{config['dataset_name']}_{config['experiment_name']}_{config['network_backbone']}_{config['network_decoder']}_{config['filter_name']}")
 
     logging.getLogger().setLevel(config["logging"])
 
@@ -304,6 +305,10 @@ def main(config):
                 "IoU_val": test_iou,
                 "Loss_val": test_aloss,
             }
+
+            print("Epoch {}".format(epoch))
+            print(val_log_data)
+
             logs_file(os.path.join(savedir_root, "logs_val.csv"), train_iter_count, val_log_data)
 
             # tensorboard logging
@@ -313,13 +318,14 @@ def main(config):
         epoch += 1
 
 
-
+# noinspection PyPackageRequirements
 if __name__ == "__main__":
 
 
     parser = argparse.ArgumentParserFromFile(description='Process some integers.')
     parser.add_argument('--config_default', type=str, default="configs/config_default.yaml")
     parser.add_argument('--config', '-c', type=str, default=None)
+    parser.add_argument('--gpu', type=int, default=0)
     parser.update_file_arg_names(["config_default", "config"])
 
     config = parser.parse(use_unknown=True)

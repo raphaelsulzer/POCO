@@ -1,5 +1,5 @@
-
 import os
+os.environ["NUMEXPR_MAX_THREADS"] = "4"
 import logging
 import numpy as np
 from tqdm import tqdm
@@ -291,11 +291,12 @@ def main(config):
     config = eval(str(config))  
     logging.getLogger().setLevel(config["logging"])
     disable_log = (config["log_mode"] != "interactive")
-    device = torch.device(config["device"])
-    if config["device"] == "cuda":
-        torch.backends.cudnn.benchmark = True
+    device = torch.device(config["device"]+":"+config["gpu"])
+    torch.backends.cudnn.benchmark = True
 
     savedir_root = config["save_dir"]
+    # savedir_root = os.path.join(config["save_dir"],f"{config['dataset_name']}_{config['experiment_name']}_{config['network_backbone']}_{config['network_decoder']}_{config['filter_name']}")
+
 
     # create the network
     N_LABELS = config["network_n_labels"]
@@ -344,8 +345,11 @@ def main(config):
 
     # build the dataset
     gen_dataset = DatasetClass(config["dataset_root"],
-                split=config["test_split"], 
-                transform=test_transform, 
+                scan=config["scan"],
+                split=config["test_split"],
+                categories=config["classes"],
+                rotate=config["transform"],
+                transform=test_transform,
                 network_function=network_function, 
                 filter_name=config["filter_name"], 
                 num_non_manifold_points=config["non_manifold_points"],
@@ -357,23 +361,23 @@ def main(config):
         gen_dataset,
         batch_size=1,
         shuffle=False,
-        num_workers=0,
+        num_workers=config["threads"],
     )
 
     
     with torch.no_grad():
 
-        gen_dir = f"gen_{config['dataset_name']}"
-        gen_dir += f"_{config['test_split']}"
-        if config['manifold_points'] <= 0:
-            gen_dir += f"_allPts"
-        else:
-            gen_dir += f"_{config['manifold_points']}"
+        # gen_dir = f"gen_{config['dataset_name']}"
+        # gen_dir += f"_{config['test_split']}"
+        # if config['manifold_points'] <= 0:
+        #     gen_dir += f"_allPts"
+        # else:
+        #     gen_dir += f"_{config['manifold_points']}"
+        #
+        # if "gen_descriptor" in config:
+        #     gen_dir += f"_{config['gen_descriptor']}"
 
-        if "gen_descriptor" in config:
-            gen_dir += f"_{config['gen_descriptor']}"
-
-        savedir_mesh_root = os.path.join(savedir_root, gen_dir)
+        savedir_mesh_root = os.path.join(savedir_root, config["gen_dir"])
 
 
         for data in tqdm(gen_loader, ncols=100):
@@ -381,14 +385,13 @@ def main(config):
             shape_id = data["shape_id"].item()
             category_name = gen_dataset.get_category(shape_id)
             object_name = gen_dataset.get_object_name(shape_id)
-            savedir = gen_dataset.get_save_dir(shape_id)
 
             # print(f"{shape_id} | {category_name} - {object_name} - {data['pos'].shape}")
 
             # create the directories
-            savedir_points = os.path.join(savedir_mesh_root, "input", savedir)
+            savedir_points = os.path.join(savedir_mesh_root, "input", category_name)
             os.makedirs(savedir_points, exist_ok=True)
-            savedir_mesh = os.path.join(savedir_mesh_root, "meshes", savedir)
+            savedir_mesh = os.path.join(savedir_mesh_root, "meshes", category_name)
             os.makedirs(savedir_mesh, exist_ok=True)
 
             # if resume skip if the file already exists
@@ -521,7 +524,7 @@ def main(config):
             if "gen_resolution_metric" in config and config["gen_resolution_metric"] is not None:
                 step = config['gen_resolution_metric'] * scale
                 resolution = None
-            elif config["gen_resolution_global"] is not None:
+            elif "gen_resolution_global" in config and config["gen_resolution_global"] is not None:
                 step = None
                 resolution = config["gen_resolution_global"]
             else:
@@ -583,9 +586,12 @@ if __name__ == "__main__":
     parser.add_argument('--config', type=str, required=True)
     parser.add_argument('--num_mesh', type=int, default=None)
     parser.add_argument("--gen_refine_iter", type=int, default=10)
+    parser.add_argument("--gpu", type=str, default="0")
 
     parser.update_file_arg_names(["config_default", "config"])
     config = parser.parse(use_unknown=True)
+
+
     
     logging.getLogger().setLevel(config["logging"])
     if config["logging"] == "DEBUG":

@@ -1,0 +1,15 @@
+dataset_name: ModelNet10
+dataset_root: /mnt/raphael/ModelNet10
+save_dir: /mnt/raphael/ShapeNet_out/benchmark/poco/tr
+gen_dir: modelnet
+
+classes: ["bathtub",  "bed",  "desk",  "dresser",  "nightstand",  "toilet"]
+scan: 43
+manifold_points: 3000
+non_manifold_points: 2048
+random_noise: 0.0
+
+gen_resolution_global: 128
+
+iter_nbr: 600000
+

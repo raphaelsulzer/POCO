@@ -11,6 +11,7 @@ manifold_points: 2048
 non_manifold_points: 2048
 random_noise: null # 0.1
 normals: False
+#transform: 0
 
 #training
 training_random_scale: null # 0.1
@@ -30,12 +31,13 @@ network_decoder_k: 64
 network_n_labels: 2
 
 device: "cuda" 
-threads: 8
+threads: 4
 log_mode: "no_log"
 logging: INFO
 
 val_num_mesh: null
 val_interval: 1
+
 
 
 

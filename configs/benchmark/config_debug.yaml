@@ -1,0 +1,12 @@
+dataset_name: ShapeNet
+dataset_root: /mnt/raphael/ShapeNet
+save_dir: /mnt/raphael/ShapeNet_out/benchmark/poco/debug
+gen_dir: debug
+
+manifold_points: 3000
+non_manifold_points: 2048
+random_noise: 0.0
+
+gen_resolution_global: 128
+
+iter_nbr: 600000

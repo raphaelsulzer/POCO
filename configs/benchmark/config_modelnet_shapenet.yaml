@@ -1,0 +1,15 @@
+dataset_name: ShapeNet
+dataset_root: /mnt/raphael/ShapeNet
+save_dir: /mnt/raphael/ModelNet10_out/benchmark/poco/tr
+gen_dir: shapenet
+
+classes: null
+scan: 4
+manifold_points: 3000
+non_manifold_points: 2048
+random_noise: 0.0
+transform: 1
+
+gen_resolution_global: 128
+
+iter_nbr: 600000

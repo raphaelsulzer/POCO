@@ -1,4 +1,6 @@
 from .shapenet import ShapeNet
+from .modelnet import ModelNet10
+from .reconbench import Reconbench
 
 from .synthetic_room import ShapeNetSyntheticRooms as SyntheticRooms
 

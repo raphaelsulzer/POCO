@@ -225,7 +225,7 @@ class FixedPoints(object):
             num_nodes = data[self.item_list[0]].shape[0]
 
         if self.replace:
-            choice = np.random.choice(num_nodes, self.num, replace=True)
+            choice = np.random.choice(num_nodes, self.num, replace=False) # replace=True in original code, however, that would mean that duplicates are allowed
             choice = torch.from_numpy(choice).to(torch.long)
         elif not self.allow_duplicates:
             choice = torch.randperm(num_nodes)[:self.num]
