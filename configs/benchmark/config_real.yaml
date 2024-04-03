@@ -1,0 +1,17 @@
+dataset_name: Real
+dataset_root: /mnt/raphael/real/input
+save_dir: /mnt/raphael/real_out/poco
+gen_dir: shapenet3000
+
+classes: "50000"
+scan: "pointcloud"
+manifold_points: 50000
+non_manifold_points: 2048
+random_noise: 0.0
+transform: 0
+normals: false
+
+
+gen_resolution_global: 128
+
+iter_nbr: 600000
